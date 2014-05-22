@@ -35,16 +35,23 @@ void Recoginzer::load(const char *filename)
 {	
 }
 
-bool SVMRecognizer::train(cv::Mat &trainData, std::vector<int> labels)
+void Preprecessor::preprocess(const cv::Mat &image, cv::Mat &dst)
 {
-	Mat mLabels(labels);
-	return svm.train(trainData, mLabels, Mat(), Mat(), params);
+	Mat bin;
+	threshold(image, bin, 60, 255, CV_THRESH_BINARY_INV);
+
+	Size s = bin.size();
+	int mx = max(s.width, s.height);
+
+
+	cv::Mat m = Mat::eye(Size(3, 2), CV_32F);
+	m.at<float>(0, 2) = mx/2.0 - s.width/2.0;
+	m.at<float>(1, 2) = mx/2.0 - s.height/2.0;
+	Mat affine;
+	warpAffine(bin, affine, m, Size(mx, mx));
+	resize(affine, dst, Size(20,20));
 }
 
-float SVMRecognizer::predict( cv::Mat &sample )
-{
-	return svm.predict(sample);
-}
 
 static void bincount(cv::Mat& x, cv::Mat& weight, int minlength, vector<float>& vechist)
 {
@@ -100,13 +107,23 @@ static void preprocess_hog(Mat& img, vector<float>& vecHist)
 
 void FeatureMaker::getFeatures(const cv::Mat &img, cv::Mat &feature)
 {
-	vector<Mat> vecImg(4);
-	vecImg[0] = img(Rect(0,0, 10,10));
-	vecImg[1] = img(Rect(10,0,10,10));
-	vecImg[2] = img(Rect(0,10,10,10));
-	vecImg[3] = img(Rect(10,10,10,10));
+	Mat gray;
 
-	feature = Mat::zeros(Size(1, 64), CV_32F);
+	if (img.channels() == 3)
+	{
+		cvtColor(img, gray, CV_RGB2GRAY);
+		threshold(gray, gray, 100, 255, CV_THRESH_BINARY);
+	}
+	else 
+	{
+		gray = img;
+	}
+	vector<Mat> vecImg(4);
+	vecImg[0] = gray(Rect(0,0, 10,10));
+	vecImg[1] = gray(Rect(10,0,10,10));
+	vecImg[2] = gray(Rect(0,10,10,10));
+	vecImg[3] = gray(Rect(10,10,10,10));
+
 	for (int i =0; i < 4;i++)
 	{
 		vector<float> vh;
@@ -115,6 +132,16 @@ void FeatureMaker::getFeatures(const cv::Mat &img, cv::Mat &feature)
 			feature.push_back(vh[j]);
 	}
 
+#if 0
+	Mat m = gray.reshape(1, 1);
+	int len = m.size().width * m.size().height;
+	
+	for (int j = 0; j < len; j++)
+	{
+		float f = (float)m.at<uchar>(0, j);
+		feature.push_back(f);
+	}
+#endif	
 }
 
 
@@ -149,7 +176,7 @@ void FeatureMaker::makeSample(std::string trainDataPath,
 	}
 
 	Size s = features_.size();
-	features_ = features_.reshape(0, s.width*s.height/ 128);
+	features_ = features_.reshape(0, s.width*s.height/ 64);
 	s = features_.size();
 	samples = features_;
 	labels = labels_;
@@ -180,6 +207,28 @@ void FeatureMaker::load(const char *filename)
 		labels_.push_back(int(*it));
 	}
 	
+}
+
+bool SVMRecognizer::train(cv::Mat &trainData, std::vector<float> &labels)
+{
+	Mat mLabels(labels);
+	return svm.train(trainData, mLabels, Mat(), Mat(), params);
+}
+
+float SVMRecognizer::predict( cv::Mat &sample )
+{
+	return svm.predict(sample);
+}
+
+
+void SVMRecognizer::save(const char *filename)
+{
+	svm.save(filename);
+}
+
+void SVMRecognizer::load(const char *filename)
+{
+	svm.load(filename);
 }
 
 // end of file

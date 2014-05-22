@@ -45,10 +45,9 @@ public:
 
 	virtual float predict( cv::Mat &sample );
 
-private: 
-	void save(const char *filename);
+	virtual void save(const char *filename);
 
-	void load(const char *filename);
+	virtual void load(const char *filename);
 
 };
 
@@ -59,22 +58,25 @@ public:
 	SVMRecognizer()
 	{
 		params.svm_type    = CvSVM::C_SVC;
- 		params.C           = 0.1;
- 		params.kernel_type = CvSVM::LINEAR;
- 		params.term_crit   = TermCriteria(CV_TERMCRIT_ITER, (int)1000, 1e-4);
+ 		params.kernel_type = CvSVM::RBF;
+ 		params.term_crit   = TermCriteria(CV_TERMCRIT_ITER, (int)1000, 0.01);
 	}
-	SVMRecognizer(double C, double gamma)
+	SVMRecognizer(double C,  double gamma, int maxCnt, double esp)
 	{
  		params.svm_type    = CvSVM::C_SVC;
  		params.C           = C;
- 		params.kernel_type = CvSVM::LINEAR;
- 		params.term_crit   = TermCriteria(CV_TERMCRIT_ITER, (int)1e7, gamma);
+ 		params.kernel_type = CvSVM::RBF;
+		params.gamma = gamma;
+ 		params.term_crit   = TermCriteria(CV_TERMCRIT_ITER, maxCnt, esp);
 	}
 
-	bool train(cv::Mat &trainData, std::vector<int> labels);
+	bool train(cv::Mat &trainData, std::vector<float> &labels);
 
 	float predict( cv::Mat &sample );
 
+	void save(const char *filename);
+
+	void load(const char *filename);
 private:
 	CvSVM svm;
 	CvSVMParams params;
