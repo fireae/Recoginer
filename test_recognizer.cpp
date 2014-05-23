@@ -19,8 +19,14 @@ int main(int argc, char *argv[])
 	Mat thin1;
 	thin(bin2, thin1, 7);
 	vector< vector<double> > descriptor;
-	getShapeContextImage(bin2, descriptor, 5, 12, 2, 0.0);
+	getShapeContextImage(thin1, descriptor, 5, 12, 2, 0.0, true, true);
+	
+	vector< vector<double> > desc1;
+	getShapeContextImage(thin1, desc1, 5, 12, 2, 0.0, true, true);
+	Mat C;
+	getMatchCost(descriptor, desc1, C);
 
+	cout << "C " << C << endl;
 	double pf = std::pow(2.0, 5);
 	cout << pf << endl;
 	return 1;

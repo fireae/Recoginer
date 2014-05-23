@@ -36,7 +36,7 @@ void getShapeContextPoint(cv::Mat &image, cv::Point &center, vector<double> &des
 			}
 			else 
 			{
-				std::cout << "i: " << xi << "j: " << yi << std::endl;
+				//std::cout << "i: " << xi << "j: " << yi << std::endl;
 				conf = image.at<uchar>(xi, yi);
 			}
 
@@ -135,6 +135,44 @@ void getShapeContextImage(cv::Mat &image, vector<vector<double> > &descriptor,
 					factor, sigma, normalize, take_sqrt);
 				descriptor.push_back(desc);
 			}
+		}
+	}
+}
+
+void get2PointMatchCost(vector<double> &hi, vector<double> &hj, double &C)
+{
+	if (hi.size() != hj.size())
+		return;
+
+	double sum = 0.0;
+	int sz = hi.size();
+	for (int k = 0 ; k < sz; k++)
+	{
+		if (hi[k] + hj[k] < 0.0000001)
+			sum += 0.0;
+		else
+		{
+			sum += (hi[k] - hj[k])*(hi[k] - hj[k])/(hi[k] + hj[k]);
+		}
+	}
+
+	C = 0.5 * sum;
+}
+
+void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, Mat& C)
+{
+	C = Mat::zeros(Size(p.size(), q.size()), CV_64FC1);
+
+	for (int i = 0; i < p.size(); i++)
+	{
+		vector<double> &hi = p.at(i);
+		for (int j = 0; j < q.size(); j++)
+		{
+			vector<double> &hj = q.at(j);
+			double c;
+			get2PointMatchCost(hi, hj, c);
+
+			C.at<double>(i, j) = c;
 		}
 	}
 }
