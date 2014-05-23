@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include "recognizer.hpp"
 #include "shapecontext.hpp"
+#include "thin.hpp"
 using namespace cv;
 using namespace std;
 using namespace os;
@@ -12,11 +13,11 @@ using namespace os;
 int main(int argc, char *argv[])
 {
 	Mat img2 = cv::imread("d:\\4.bmp", 0);
-	cv::imshow("a", img2);
-	cv::waitKey(0);
+	
 	Mat bin2;
 	cv::threshold(img2, bin2, 100, 255, CV_THRESH_BINARY);
-	
+	Mat thin1;
+	thin(bin2, thin1, 7);
 	vector< vector<double> > descriptor;
 	getShapeContextImage(bin2, descriptor, 5, 12, 2, 0.0);
 
