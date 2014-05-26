@@ -12,21 +12,31 @@ using namespace os;
 
 int main(int argc, char *argv[])
 {
-	Mat img2 = cv::imread("d:\\4.bmp", 0);
+	Mat img2 = cv::imread("d:\\0007.bmp", 0);
 	
 	Mat bin2;
 	cv::threshold(img2, bin2, 100, 255, CV_THRESH_BINARY);
 	Mat thin1;
 	thin(bin2, thin1, 7);
+
+
 	vector< vector<double> > descriptor;
 	getShapeContextImage(thin1, descriptor, 5, 12, 2, 0.0, true, true);
 	
+	Mat img21 = cv::imread("d:\\0448.bmp", 0);
+	
+	Mat bin21;
+	cv::threshold(img21, bin21, 100, 255, CV_THRESH_BINARY);
+	Mat thin11;
+	thin(bin21, thin11, 7);
 	vector< vector<double> > desc1;
-	getShapeContextImage(thin1, desc1, 5, 12, 2, 0.0, true, true);
-	Mat C;
+	getShapeContextImage(thin11, desc1, 5, 12, 2, 0.0, true, true);
+	vector<vector<double > > C;
 	getMatchCost(descriptor, desc1, C);
 
-	cout << "C " << C << endl;
+	vector<vector<int> > result;
+	getBestMatch(C, result);
+	
 	double pf = std::pow(2.0, 5);
 	cout << pf << endl;
 	return 1;

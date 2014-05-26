@@ -1,5 +1,7 @@
 #include "shapecontext.hpp"
 #include <iostream>
+#include "HungarianMethod.hpp"
+
 using namespace std;
 using namespace cv;
 
@@ -162,11 +164,12 @@ void get2PointMatchCost(vector<double> &hi, vector<double> &hj, double &C)
 void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, Mat& C)
 {
 	C = Mat::zeros(Size(p.size(), q.size()), CV_64FC1);
+	int min_size = std::min(p.size(), q.size());
 
-	for (int i = 0; i < p.size(); i++)
+	for (int i = 0; i < min_size; i++)
 	{
 		vector<double> &hi = p.at(i);
-		for (int j = 0; j < q.size(); j++)
+		for (int j = 0; j < min_size; j++)
 		{
 			vector<double> &hj = q.at(j);
 			double c;
@@ -176,3 +179,30 @@ void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, Mat& C)
 		}
 	}
 }
+
+void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, vector<vector<double > >& C)
+{
+	int min_size = std::min(p.size(), q.size());
+	for (int i = 0; i < min_size; i++)
+	{
+		vector<double> &hi = p.at(i);
+		vector<double> ci;
+		for (int j = 0; j < min_size; j++)
+		{
+			vector<double> &hj = q.at(j);
+			double c;
+			get2PointMatchCost(hi, hj, c);
+			ci.push_back(c);
+		}
+		C.push_back(ci);
+	}
+}
+
+void getBestMatch(vector< vector<double> > &C, vector<vector<int> > &result)
+{
+	HungarianMethod method;
+	method.CallHM(C, result);
+	//method.OutResult();
+}
+
+///////// end of line ////////
