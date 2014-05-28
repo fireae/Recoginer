@@ -12,6 +12,29 @@ using namespace os;
 
 int main(int argc, char *argv[])
 {
+	for (int i = 0; i < 10; i++)
+	{
+		char szNum[100];
+		sprintf(szNum, "%s/%d", "D:\\Pictures\\num_samples", i);
+		vector<string> files;
+		os::listdir(szNum, files);
+
+		for (int j = 0; j < files.size(); j++)
+		{
+			string img_path;
+			os::path::join(szNum, files[j], img_path);
+			Mat img2 = cv::imread(img_path, 0);
+			cv::medianBlur(img2, img2, 3);
+			Mat thin1;
+			Mat bin2;
+			thin(img2, thin1, 3);
+			
+			cv::imshow("b", thin1);
+			cv::waitKey();
+		}
+	}
+
+
 	Mat img2 = cv::imread("d:\\0007.bmp", 0);
 	
 	Mat bin2;
@@ -30,7 +53,7 @@ int main(int argc, char *argv[])
 	Mat thin11;
 	thin(bin21, thin11, 7);
 	vector< vector<double> > desc1;
-	getShapeContextImage(thin11, desc1, 5, 12, 2, 0.0, true, true);
+	getShapeContextImage(thin1, desc1, 5, 12, 2, 0.0, true, true);
 	vector<vector<double > > C;
 	getMatchCost(descriptor, desc1, C);
 

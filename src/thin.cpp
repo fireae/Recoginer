@@ -1,7 +1,7 @@
 #include "thin.hpp"
 
 
-// [0-9],10个数字，0 代表sum 2-9的和， 1代表2-9的关心和，2-9代表围绕中心点的8个点
+// uchar* p[10],代表10个数字，p[0] 代表sum 即2-9的和， p[1]代表2-9的关系和，p[2-9]代表围绕中心点的8个点
 static void getKernel(Mat &img, int row_idx, int col_idx, uchar* p)
 {
 	int cols = img.cols;
