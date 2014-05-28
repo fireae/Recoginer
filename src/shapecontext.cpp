@@ -1,6 +1,5 @@
 #include "shapecontext.hpp"
 #include <iostream>
-#include "HungarianMethod.hpp"
 
 using namespace std;
 using namespace cv;
@@ -200,8 +199,8 @@ void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, vector<
 
 void getBestMatch(vector< vector<double> > &C, vector<vector<int> > &result)
 {
-	HungarianMethod method;
-	method.CallHM(C, result);
+	//HungarianMethod method;
+	//method.CallHM(C, result);
 	//method.OutResult();
 }
 
