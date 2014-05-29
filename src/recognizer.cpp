@@ -38,18 +38,17 @@ void Recoginzer::load(const char *filename)
 void Preprecessor::preprocess(const cv::Mat &image, cv::Mat &dst)
 {
 	Mat bin;
-	threshold(image, bin, 60, 255, CV_THRESH_BINARY_INV);
+	threshold(image, bin, 60, 255, CV_THRESH_BINARY);
 
 	Size s = bin.size();
 	int mx = max(s.width, s.height);
-
 
 	cv::Mat m = Mat::eye(Size(3, 2), CV_32F);
 	m.at<float>(0, 2) = mx/2.0 - s.width/2.0;
 	m.at<float>(1, 2) = mx/2.0 - s.height/2.0;
 	Mat affine;
 	warpAffine(bin, affine, m, Size(mx, mx));
-	resize(affine, dst, Size(20,20));
+	resize(affine, dst, Size(16,16));
 }
 
 
@@ -112,12 +111,18 @@ void FeatureMaker::getFeatures(const cv::Mat &img, cv::Mat &feature)
 	if (img.channels() == 3)
 	{
 		cvtColor(img, gray, CV_RGB2GRAY);
-		threshold(gray, gray, 100, 255, CV_THRESH_BINARY);
+		threshold(gray, gray, 100, 1, CV_THRESH_BINARY);
 	}
 	else 
 	{
 		gray = img;
+		threshold(gray, gray, 100, 1, CV_THRESH_BINARY);
 	}
+
+	
+	feature = gray.reshape(1,1);
+	return ;
+
 	vector<Mat> vecImg(4);
 	vecImg[0] = gray(Rect(0,0, 10,10));
 	vecImg[1] = gray(Rect(10,0,10,10));
@@ -132,16 +137,6 @@ void FeatureMaker::getFeatures(const cv::Mat &img, cv::Mat &feature)
 			feature.push_back(vh[j]);
 	}
 
-#if 0
-	Mat m = gray.reshape(1, 1);
-	int len = m.size().width * m.size().height;
-	
-	for (int j = 0; j < len; j++)
-	{
-		float f = (float)m.at<uchar>(0, j);
-		feature.push_back(f);
-	}
-#endif	
 }
 
 
@@ -176,7 +171,7 @@ void FeatureMaker::makeSample(std::string trainDataPath,
 	}
 
 	Size s = features_.size();
-	features_ = features_.reshape(0, s.width*s.height/ 64);
+	features_ = features_.reshape(0, s.width*s.height/ 256);
 	s = features_.size();
 	samples = features_;
 	labels = labels_;

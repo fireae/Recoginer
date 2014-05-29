@@ -6,89 +6,138 @@
 #include "recognizer.hpp"
 #include "shapecontext.hpp"
 #include "thin.hpp"
+#include "munkres.h"
+
 using namespace cv;
 using namespace std;
 using namespace os;
 
+void getFeature(Mat &img, Mat &feature)
+{
+	feature = img.reshape(1, 1);
+}
+
 int main(int argc, char *argv[])
 {
-	for (int i = 0; i < 10; i++)
+#if 1
+	std::vector<string> files;
+	string dir_path = "D:\\Pictures\\bill5\\2"; 
+	os::listdir(dir_path, files);
+
+	Mat img1 = cv::imread("D:\\Pictures\\bill5\\8\\86.bmp", 0);
+	
+	Mat bin1;
+	cv::threshold(img1, bin1, 100, 255, CV_THRESH_BINARY);
+	Mat thin1;
+	thin(bin1, thin1, 7);
+
+	vector< vector<double> > desc1;
+	getShapeContextImage(thin1, desc1, 5, 12, 1.6, 0.0, true, true);
+	
+	for (int i = 0; i < files.size(); i++)
 	{
-		char szNum[100];
-		sprintf(szNum, "%s/%d", "D:\\Pictures\\num_samples", i);
-		vector<string> files;
-		os::listdir(szNum, files);
+		string img_path;
+		os::path::join(dir_path, files[i], img_path);
+		Mat img2 = cv::imread(img_path, 0);
+	
+		Mat bin2;
+		cv::threshold(img2, bin2, 100, 255, CV_THRESH_BINARY);
+		Mat thin2;
+		thin(bin2, thin2, 7);
+		vector< vector<double> > desc2;
+		getShapeContextImage(thin2, desc2, 5, 12, 1.6, 0.0, true, true);
+		Mat C;
+		getMatchCost(desc1, desc2, C);
 
-		for (int j = 0; j < files.size(); j++)
-		{
-			string img_path;
-			os::path::join(szNum, files[j], img_path);
-			Mat img2 = cv::imread(img_path, 0);
-			cv::medianBlur(img2, img2, 3);
-			Mat thin1;
-			Mat bin2;
-			thin(img2, thin1, 3);
-			
-			cv::imshow("b", thin1);
-			cv::waitKey();
-		}
+		Munkres munk;
+		vector<int> result;
+		double res_val;
+		munk.solve(C, result, res_val);
+		double avg = res_val / (desc1.size() + desc2.size());
+		cout << "idx: " << i << " res value: " << res_val << ", avg is: " << avg << endl;
 	}
-
-
-	Mat img2 = cv::imread("d:\\0007.bmp", 0);
+	Mat img2 = cv::imread("D:\\Pictures\\bill5\\4\\140.jpg", 0);
 	
 	Mat bin2;
 	cv::threshold(img2, bin2, 100, 255, CV_THRESH_BINARY);
-	Mat thin1;
-	thin(bin2, thin1, 7);
+	Mat thin2;
+	thin(bin2, thin2, 7);
+	vector< vector<double> > desc2;
+	getShapeContextImage(thin2, desc2, 5, 12, 1.6, 0.0, true, true);
+	Mat C;
+	getMatchCost(desc1, desc2, C);
 
+	Munkres munk;
+	vector<int> result;
+	double res_val;
+	munk.solve(C, result, res_val);
+	//cout << "C" << C << endl;
 
-	vector< vector<double> > descriptor;
-	getShapeContextImage(thin1, descriptor, 5, 12, 2, 0.0, true, true);
-	
-	Mat img21 = cv::imread("d:\\0448.bmp", 0);
-	
-	Mat bin21;
-	cv::threshold(img21, bin21, 100, 255, CV_THRESH_BINARY);
-	Mat thin11;
-	thin(bin21, thin11, 7);
-	vector< vector<double> > desc1;
-	getShapeContextImage(thin1, desc1, 5, 12, 2, 0.0, true, true);
-	vector<vector<double > > C;
-	getMatchCost(descriptor, desc1, C);
-
-	vector<vector<int> > result;
-	getBestMatch(C, result);
-	
+	//getBestMatch(C, result);
+	cout << "res value: " << res_val << endl;
 	double pf = std::pow(2.0, 5);
 	cout << pf << endl;
+	int b;
+	cin >> b;
 	return 1;
+#endif
 
-	vector<string> files;
+#if 1
 
 	struct FeatureMaker maker;
 	Mat samples;
 	vector<float> labels;
-	maker.makeSample("D:\\Pictures\\num_samples", samples, labels);
+	maker.makeSample("D:\\Pictures\\bill5", samples, labels);
 	maker.save("d:\\a.xml");
 	cout << "ok" << endl;
 
-
+	Mat fsamples;
+	samples.convertTo(fsamples, CV_32FC1);
 	//train
 	SVMRecognizer svmReg;
-	svmReg.train(samples, labels);
+	svmReg.train(fsamples, labels);
 	svmReg.save("d:\\a.dat");
 
-	cv::Mat test_img = cv::imread("d:\\Downloads\\4.bmp", 0);
+	cv::Mat test_img = cv::imread("d:\\Downloads\\132.bmp", 0);
 	
 	Preprecessor pre;
 	Mat dst;
 	pre.preprocess(test_img, dst);
-
+	cv::imshow("g", dst);
+	cv::waitKey();
 	cv::Mat test_feature;
 	maker.getFeatures(dst, test_feature);
-	float f = svmReg.predict(test_feature);
+	cv::Mat ftest_feature;
+	test_feature.convertTo(ftest_feature, CV_32FC1);
+	float f = svmReg.predict(ftest_feature);
 	cout << f;
+#endif
+
+#if 0
+	struct FeatureMaker maker;
+	Mat samples;
+	vector<float> labels;
+	maker.makeSample("D:\\Pictures\\bill5", samples, labels);
+	maker.save("d:\\a.xml");
+	cout << "ok" << endl;
+	Mat trainClasses(labels);
+	Mat fsamples;
+	samples.convertTo(fsamples, CV_32FC1);
+	CvKNearest knn(fsamples, trainClasses);
+
+	cv::Mat test_img = cv::imread("d:\\Downloads\\2.bmp", 0);
+	Preprecessor pre;
+	Mat dst;
+	pre.preprocess(test_img, dst);
+	Mat test_feature;
+	maker.getFeatures(dst, test_feature);
+	Mat nearests;
+	Mat result;
+	Mat ftest;
+	test_feature.convertTo(ftest, CV_32FC1);
+	double response = knn.find_nearest(ftest,20,result, nearests, Mat());
+#endif
+
 	int a;
 	cin >> a;
 	return 0;

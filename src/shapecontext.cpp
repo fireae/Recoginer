@@ -162,13 +162,13 @@ void get2PointMatchCost(vector<double> &hi, vector<double> &hj, double &C)
 
 void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, Mat& C)
 {
-	C = Mat::zeros(Size(p.size(), q.size()), CV_64FC1);
-	int min_size = std::min(p.size(), q.size());
+	int max_len = std::max(p.size(), q.size());
+	C = Mat::zeros(Size(max_len, max_len), CV_64FC1);
 
-	for (int i = 0; i < min_size; i++)
+	for (int i = 0; i < p.size(); i++)
 	{
 		vector<double> &hi = p.at(i);
-		for (int j = 0; j < min_size; j++)
+		for (int j = 0; j < q.size(); j++)
 		{
 			vector<double> &hj = q.at(j);
 			double c;
@@ -181,19 +181,28 @@ void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, Mat& C)
 
 void getMatchCost( vector<vector<double> >&p, vector<vector<double> >&q, vector<vector<double > >& C)
 {
-	int min_size = std::min(p.size(), q.size());
-	for (int i = 0; i < min_size; i++)
+	int max_size = std::max(p.size(), q.size());
+	for (int i = 0; i < max_size; i++)
+	{
+		vector<double> ci;
+		for (int j = 0; j < max_size; j++)
+		{
+			ci.push_back(0.0);
+		}
+		C.push_back(ci);
+	}
+
+	for (int i = 0; i < p.size(); i++)
 	{
 		vector<double> &hi = p.at(i);
-		vector<double> ci;
-		for (int j = 0; j < min_size; j++)
+		vector<double> &ci = C[i];
+		for (int j = 0; j < q.size(); j++)
 		{
 			vector<double> &hj = q.at(j);
 			double c;
 			get2PointMatchCost(hi, hj, c);
-			ci.push_back(c);
+			ci[j] = c;
 		}
-		C.push_back(ci);
 	}
 }
 

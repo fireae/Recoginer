@@ -271,7 +271,7 @@ Munkres::step5(void) {
 }
 
 void 
-Munkres::solve(cv::Mat &m) {
+Munkres::solve(cv::Mat &m, vector<int> &result, double &result_val, bool ismin) {
 	// Linear assignment problem solution
 	// [modifies matrix in-place.]
 	// matrix(row,col): row major format assumed.
@@ -280,24 +280,37 @@ Munkres::solve(cv::Mat &m) {
 	// (extra 0 values are replaced with -1)
 	int cols = m.cols;
 	int rows = m.rows;
-#ifdef DEBUG
-	std::cout << "Munkres input matrix:" << std::endl;
-	for ( int row = 0 ; row < rows ; row++ ) {
-		for ( int col = 0 ; col < cols ; col++ ) {
-			std::cout.width(8);
-			std::cout << m(row,col) << ",";
+	result.resize(rows);
+	Mat save_mat = m.clone();
+	if (!ismin)
+	{
+		double max_val = 0.0;
+		for (int i = 0; i < rows; i++)
+		{
+			double *data = m.ptr<double>(i);
+			for (int j = 0; j < cols; j++)
+			{
+				if (data[j] > max_val)
+					max_val = data[j];
+			}
 		}
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-#endif
 
+		for (int i = 0; i < rows; i++)
+		{
+			double *data = m.ptr<double>(i);
+			for (int j = 0; j < cols; j++)
+			{
+				if (data[j] > max_val)
+					data[j] = max_val-data[j];
+			}
+		}
+	}
 	bool notdone = true;
 	int step = 1;
 
 	this->matrix = m;
 	// Z_STAR == 1 == starred, Z_PRIME == 2 == primed
-	mask_matrix.resize(matrix.rows, matrix.cols);
+	mask_matrix = Mat::zeros(Size(matrix.rows, matrix.cols), CV_8UC1);
 
 	row_mask = new bool[matrix.rows];
 	col_mask = new bool[matrix.cols];
@@ -333,25 +346,23 @@ Munkres::solve(cv::Mat &m) {
 	}
 
 	// Store results
+	result_val = 0.0;
 	for ( int row = 0 ; row < matrix.rows ; row++ )
+	{
 		for ( int col = 0 ; col < matrix.cols ; col++ )
+		{
 			if ( mask_matrix.at<uchar>(row,col) == Z_STAR )
+			{
+				result_val += save_mat.at<double>(row, col);
+				result[row] = col;
 				matrix.at<double>(row,col) = 0;
+			}
 			else
+			{
 				matrix.at<double>(row,col) = -1;
-
-#ifdef DEBUG
-	std::cout << "Munkres output matrix:" << std::endl;
-	for ( int row = 0 ; row < matrix.rows() ; row++ ) {
-		for ( int col = 0 ; col < matrix.columns() ; col++ ) {
-			std::cout.width(1);
-			std::cout << matrix(row,col) << ",";
+			}
 		}
-		std::cout << std::endl;
 	}
-	std::cout << std::endl;
-#endif
-
 	m = matrix;
 
 	delete [] row_mask;

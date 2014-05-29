@@ -26,7 +26,8 @@ using namespace cv;
 
 class Munkres {
 public:
-	void solve(cv::Mat &m);
+	//void solve(cv::Mat &m);
+	void solve(cv::Mat &m, vector<int> &result, double &result_val, bool ismin = true);
 private:
 	inline bool find_uncovered_in_matrix(double,int&,int&);
 	inline bool pair_in_list(const std::pair<int,int> &, const std::list<std::pair<int,int> > &);
